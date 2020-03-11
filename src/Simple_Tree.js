@@ -29,12 +29,13 @@ const ANGLE_MIN       = 10;
 const ANGLE_MAX       = 30;
 
 const SPEED_TO_GROW = 150;
-
+const MAX_TREES_COUNT = 4;
 
 //----------------------------------------------------------------------------//
 // Variables                                                                  //
 //----------------------------------------------------------------------------//
-var trees = null;
+var background_color = chroma.rgb(221, 227, 213).name()
+var trees            = [];
 
 
 //----------------------------------------------------------------------------//
@@ -44,12 +45,15 @@ function CreateVector(x, y)
 {
     return {x:x, y:y};
 }
+
 function hslToRgb(h, s, l)
 {
     return [255, 255, 255, 255]
 }
 
-
+//----------------------------------------------------------------------------//
+// Classes                                                                    //
+//----------------------------------------------------------------------------//
 class Branch
 {
     constructor(
@@ -140,15 +144,13 @@ class Tree
             0, // current generation
             max_generations
         );
-
-
     }
 
     Draw(dt)
     {
         this.branch.Draw(dt);
     }
-}
+};
 
 //----------------------------------------------------------------------------//
 // Setup / Draw                                                               //
@@ -180,22 +182,26 @@ function Setup()
     Canvas.style.width  = "100%";
     Canvas.style.height = "100%";
 
-    trees = [];
-    trees.push(new Tree(-120));
-    trees.push(new Tree(+120));
-    Canvas_Draw(0);
+    //
+    // Create the Trees.
+    const tree_root_space = (Canvas_Half_Width * 0.8);
+    for(let i = 0; i < MAX_TREES_COUNT; ++i) {
+        const tree_root_x = Random_Int(-tree_root_space, +tree_root_space);
+        trees.push(new Tree(tree_root_x));
+    }
+
+    //
+    // Start the Simulation.
+    Canvas_Start();
 }
-
-
-
 
 //------------------------------------------------------------------------------
 function Draw(dt)
 {
-    Canvas_ClearWindow(chroma.rgb(221, 227, 213).name())
+    Canvas_ClearWindow(background_color);
     for(let i = 0; i < trees.length; ++i) {
-        let tree = trees[i];
-        tree.Draw  (dt);
+        const tree = trees[i];
+        tree.Draw(dt);
     }
 }
 
