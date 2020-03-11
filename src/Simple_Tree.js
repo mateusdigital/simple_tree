@@ -80,7 +80,7 @@ class Branch
 
         if(this.curr_generation < maxGenerations) {
             const new_generation = this.curr_generation + 1;
-            let l = new Branch(
+            const left_branch = new Branch(
                 this.end.x,
                 this.end.y,
                 this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
@@ -89,7 +89,7 @@ class Branch
                 new_generation,
                 maxGenerations
             );
-            let r = new Branch(
+            const right_branch = new Branch(
                 this.end.x,
                 this.end.y,
                 this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
@@ -99,8 +99,8 @@ class Branch
                 maxGenerations
             );
 
-            this.branches.push(l);
-            this.branches.push(r);
+            this.branches.push(left_branch );
+            this.branches.push(right_branch);
         }
        this.color = chroma.rgb(102, 80, 93).name();
 
