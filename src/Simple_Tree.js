@@ -19,14 +19,14 @@
 //----------------------------------------------------------------------------//
 // Constants                                                                  //
 //----------------------------------------------------------------------------//
-const GENERATIONS_MIN = 5
-const GENERATIONS_MAX = 10;
-const SIZE_MIN        = 80;
+const GENERATIONS_MIN = 5;
+const GENERATIONS_MAX = 7;
+const SIZE_MIN        = 150;
 const SIZE_MAX        = 180;
-const DECAY_MIN       = 0.2;
-const DECAY_MAX       = 0.5;
-const ANGLE_MIN       = 10
-const ANGLE_MAX       = 50;
+const DECAY_MIN       = 0.7;
+const DECAY_MAX       = 0.9;
+const ANGLE_MIN       = 10;
+const ANGLE_MAX       = 30;
 
 const SPEED_TO_GROW = 150;
 
@@ -52,29 +52,65 @@ function hslToRgb(h, s, l)
 
 class Branch
 {
-    constructor(x, y, size, angle, distanceToRoot)
+    constructor(
+        x,
+        y,
+        currentSize,
+        currentAngle,
+        distanceToRoot,
+        currentGeneration,
+        maxGenerations)
     {
-        this.length = size;
-        this.angle  = angle;
+        this.curr_angle       = currentAngle;
+        this.curr_size        = currentSize;
+        this.curr_generation  = currentGeneration;
+        this.distance_to_root = distanceToRoot + currentSize;
 
-        this.distanceToRoot = distanceToRoot;
-
-        this.start  = CreateVector(x, y);
-        this.end    = CreateVector(
-            x + (size * Math.cos(angle * Math.PI / 180)),
-            y + (size * Math.sin(angle * Math.PI / 180))
+        this.start = CreateVector(x, y);
+        this.end   = CreateVector(
+            x + (this.curr_size * Math.cos(this.curr_angle * Math.PI / 180)),
+            y + (this.curr_size * Math.sin(this.curr_angle * Math.PI / 180))
         );
+
+        this.branches = [];
+
+        if(this.curr_generation < maxGenerations) {
+            const new_generation = this.curr_generation + 1;
+            let l = new Branch(
+                this.end.x,
+                this.end.y,
+                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
+                this.curr_angle - Random_Number(ANGLE_MIN, ANGLE_MAX),
+                this.distance_to_root,
+                new_generation,
+                maxGenerations
+            );
+            let r = new Branch(
+                this.end.x,
+                this.end.y,
+                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
+                this.curr_angle + Random_Number(ANGLE_MIN, ANGLE_MAX),
+                this.distance_to_root,
+                new_generation,
+                maxGenerations
+            );
+
+            this.branches.push(l);
+            this.branches.push(r);
+        }
+       this.color = "white"; chroma.random().name();
+
     }
 
     Draw(dt)
     {
-        let len = this.length;
-        let ang = this.angle;
+        let len = this.curr_size;
+        let ang = this.curr_angle;
 
         let x1 = this.start.x;
         let y1 = this.start.y;
 
-        let l = (/* distanceSoFar - */ this.distanceToRoot) / (this.length);
+        let l = (/* distanceSoFar - */ this.distance_to_root) / (this.curr_size);
         if(l > 1 ) {
             l = 1;
         }
@@ -82,10 +118,15 @@ class Branch
         let x2 = x1 + (len * l) * Math.cos(ang * Math.PI / 180);
         let y2 = y1 + (len * l) * Math.sin(ang * Math.PI / 180);
 
-        Canvas_SetStrokeStyle("white");
-        Canvas_SetStrokeSize (4);
+        let thickness = Math_Map(this.distance_to_root, 0, 400, 6, 1)
+        Canvas_SetStrokeStyle(this.color);
+        Canvas_SetStrokeSize (thickness);
 
         Canvas_DrawLine(x1, y1, x2, y2);
+
+        for(let i = 0; i < this.branches.length; ++i) {
+            this.branches[i].Draw(dt);
+        }
     }
 }
 
@@ -93,44 +134,25 @@ class Tree
 {
     constructor(x)
     {
-        this.generations = 1; Random_Int   (GENERATIONS_MIN, GENERATIONS_MAX);
-        this.size        = Random_Number(SIZE_MIN,        SIZE_MAX);
-        this.decay       = Random_Number(DECAY_MIN,       DECAY_MAX);
-        this.angle       = Random_Number(ANGLE_MIN,       ANGLE_MAX);
+        const desired_size    = Random_Number(SIZE_MIN,  SIZE_MAX);
+        const max_generations = Random_Int   (GENERATIONS_MIN, GENERATIONS_MAX);
 
-        this.branches   = [];
-        this.forward    = true;
-        this.curr_speed = SPEED_TO_GROW;
-        this.total_len  = 0;
+        this.branch = new Branch(
+            x,
+            Canvas_Edge_Bottom,
+            desired_size,
+            -90,
+            0, // distance to root
+            0, // current generation
+            max_generations
+        );
 
-        // Create the branches.
-        this.branches.push(new Branch(x, Canvas_Edge_Bottom, this.size, -90, 0));
 
-        let generations = Math.pow(2, this.generations) -1;
-        for(let i = 0; i < this.branches.length; ++i) {
-            --generations;
-            if(generations < 0) {
-                break;
-            }
-
-            var branch       = this.branches[i];
-            var new_size     = branch.length * (1 - this.decay);
-            var dist_to_root = branch.distanceToRoot + branch.length;
-
-            let l = new Branch(branch.end.x, branch.end.y, new_size, branch.angle + this.angle, dist_to_root);
-            let r = new Branch(branch.end.x, branch.end.y, new_size, branch.angle - this.angle, dist_to_root);
-
-            this.branches.push(l);
-            this.branches.push(r);
-        }
     }
 
     Draw(dt)
     {
-        for(let i = 0; i < this.branches.length; ++i) {
-            let branch = this.branches[i];
-            branch.Draw(dt);
-        }
+        this.branch.Draw(dt);
     }
 }
 
@@ -140,7 +162,7 @@ class Tree
 //------------------------------------------------------------------------------
 function Setup()
 {
-    Random_Seed(1);
+    Random_Seed(null);
 
     //
     // Configure the Canvas.
@@ -165,7 +187,7 @@ function Setup()
     Canvas.style.height = "100%";
 
     trees = [];
-    trees.push(new Tree(Canvas_Half_Width));
+    trees.push(new Tree(0));
 
     Canvas_Draw(0);
 }
