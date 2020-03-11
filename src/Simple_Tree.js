@@ -21,7 +21,7 @@
 //----------------------------------------------------------------------------//
 const GENERATIONS_MIN = 5;
 const GENERATIONS_MAX = 7;
-const SIZE_MIN        = 150;
+const SIZE_MIN        = 50;
 const SIZE_MAX        = 180;
 const DECAY_MIN       = 0.7;
 const DECAY_MAX       = 0.9;
@@ -98,7 +98,7 @@ class Branch
             this.branches.push(l);
             this.branches.push(r);
         }
-       this.color = "white"; chroma.random().name();
+       this.color =chroma.rgb(102, 80, 93).name();
 
     }
 
@@ -109,14 +109,8 @@ class Branch
 
         let x1 = this.start.x;
         let y1 = this.start.y;
-
-        let l = (/* distanceSoFar - */ this.distance_to_root) / (this.curr_size);
-        if(l > 1 ) {
-            l = 1;
-        }
-
-        let x2 = x1 + (len * l) * Math.cos(ang * Math.PI / 180);
-        let y2 = y1 + (len * l) * Math.sin(ang * Math.PI / 180);
+        let x2 = this.end.x;
+        let y2 = this.end.y;
 
         let thickness = Math_Map(this.distance_to_root, 0, 400, 6, 1)
         Canvas_SetStrokeStyle(this.color);
@@ -141,7 +135,7 @@ class Tree
             x,
             Canvas_Edge_Bottom,
             desired_size,
-            -90,
+            -90 + Random_Number(-10, +10),
             0, // distance to root
             0, // current generation
             max_generations
@@ -187,8 +181,8 @@ function Setup()
     Canvas.style.height = "100%";
 
     trees = [];
-    trees.push(new Tree(0));
-
+    trees.push(new Tree(-120));
+    trees.push(new Tree(+120));
     Canvas_Draw(0);
 }
 
@@ -198,7 +192,7 @@ function Setup()
 //------------------------------------------------------------------------------
 function Draw(dt)
 {
-    Canvas_ClearWindow("black")
+    Canvas_ClearWindow(chroma.rgb(221, 227, 213).name())
     for(let i = 0; i < trees.length; ++i) {
         let tree = trees[i];
         tree.Draw  (dt);
