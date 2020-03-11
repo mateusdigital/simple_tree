@@ -56,6 +56,36 @@ function hslToRgb(h, s, l)
 //----------------------------------------------------------------------------//
 class Branch
 {
+    CreateSubBranch()
+    {
+        if(this.curr_generation < this.max_generations) {
+            const new_generation = this.curr_generation + 1;
+
+            const left_branch = new Branch(
+                this.end.x,
+                this.end.y,
+                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
+                this.curr_angle - Random_Number(ANGLE_MIN, ANGLE_MAX),
+                this.distance_to_root,
+                new_generation,
+                this.max_generations
+            );
+
+            const right_branch = new Branch(
+                this.end.x,
+                this.end.y,
+                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
+                this.curr_angle + Random_Number(ANGLE_MIN, ANGLE_MAX),
+                this.distance_to_root,
+                new_generation,
+                this.max_generations
+            );
+
+            this.branches.push(left_branch );
+            this.branches.push(right_branch);
+        }
+    }
+
     constructor(
         x,
         y,
@@ -65,9 +95,9 @@ class Branch
         currentGeneration,
         maxGenerations)
     {
+        // Position / Size / Color
         this.curr_angle       = currentAngle;
         this.curr_size        = currentSize;
-        this.curr_generation  = currentGeneration;
         this.distance_to_root = distanceToRoot + currentSize;
 
         this.start = CreateVector(x, y);
@@ -76,48 +106,36 @@ class Branch
             y + (this.curr_size * Math_Sin(Math_Radians(this.curr_angle)))
         );
 
+        this.color = chroma.rgb(102, 80, 93).name();
+
+        // Generation.
+        this.curr_generation  = currentGeneration;
+        this.max_generations  = maxGenerations;
+
+        // Animation.
+        this.anim_grow_duration = 1000;
+        this.anim_grow_tween    = Tween_CreateBasic(this.anim_grow_duration)
+            .onComplete(()=>{
+                this.CreateSubBranch();
+            })
+            .start();
+
+        // Subbranches
         this.branches = [];
-
-        if(this.curr_generation < maxGenerations) {
-            const new_generation = this.curr_generation + 1;
-            const left_branch = new Branch(
-                this.end.x,
-                this.end.y,
-                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
-                this.curr_angle - Random_Number(ANGLE_MIN, ANGLE_MAX),
-                this.distance_to_root,
-                new_generation,
-                maxGenerations
-            );
-            const right_branch = new Branch(
-                this.end.x,
-                this.end.y,
-                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
-                this.curr_angle + Random_Number(ANGLE_MIN, ANGLE_MAX),
-                this.distance_to_root,
-                new_generation,
-                maxGenerations
-            );
-
-            this.branches.push(left_branch );
-            this.branches.push(right_branch);
-        }
-       this.color = chroma.rgb(102, 80, 93).name();
     }
 
     Draw(dt)
     {
-        let x1 = this.start.x;
-        let y1 = this.start.y;
-        let x2 = this.end.x;
-        let y2 = this.end.y;
+        const x1 = this.start.x;
+        const y1 = this.start.y;
+        const x2 = this.end.x;
+        const y2 = this.end.y;
 
         let thickness = 4; Math_Map(this.distance_to_root, 0, 400, 6, 1)
         Canvas_SetStrokeStyle(this.color);
         Canvas_SetStrokeSize (thickness);
 
         Canvas_DrawLine(x1, y1, x2, y2);
-
         for(let i = 0; i < this.branches.length; ++i) {
             this.branches[i].Draw(dt);
         }
@@ -195,6 +213,8 @@ function Setup()
 function Draw(dt)
 {
     Canvas_ClearWindow(background_color);
+
+    Tween_Update(dt);
     for(let i = 0; i < trees.length; ++i) {
         const tree = trees[i];
         tree.Draw(dt);
