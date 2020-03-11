@@ -28,8 +28,11 @@ const DECAY_MAX       = 0.9;
 const ANGLE_MIN       = 10;
 const ANGLE_MAX       = 30;
 
-const SPEED_TO_GROW = 150;
+const ANIM_GROW_DURATION_MIN = 1500;
+const ANIM_GROW_DURATION_MAX = 3500;
+
 const MAX_TREES_COUNT = 4;
+
 
 //----------------------------------------------------------------------------//
 // Variables                                                                  //
@@ -113,8 +116,11 @@ class Branch
         this.max_generations  = maxGenerations;
 
         // Animation.
-        this.anim_grow_duration = 1000;
-        this.anim_grow_tween    = Tween_CreateBasic(this.anim_grow_duration)
+        this.anim_grow_duration = Random_Int(
+            ANIM_GROW_DURATION_MIN,
+            ANIM_GROW_DURATION_MAX
+        );
+        this.anim_grow_tween = Tween_CreateBasic(this.anim_grow_duration)
             .onComplete(()=>{
                 this.CreateSubBranch();
             })
@@ -126,10 +132,11 @@ class Branch
 
     Draw(dt)
     {
+        const  t = this.anim_grow_tween.getValue().value;
         const x1 = this.start.x;
         const y1 = this.start.y;
-        const x2 = this.end.x;
-        const y2 = this.end.y;
+        const x2 = Math_Lerp(x1, this.end.x, t);
+        const y2 = Math_Lerp(y1, this.end.y, t);
 
         let thickness = 4; Math_Map(this.distance_to_root, 0, 400, 6, 1)
         Canvas_SetStrokeStyle(this.color);
@@ -146,8 +153,8 @@ class Tree
 {
     constructor(x)
     {
-        const desired_size    = Random_Number(SIZE_MIN,  SIZE_MAX);
-        const max_generations = Random_Int   (GENERATIONS_MIN, GENERATIONS_MAX);
+        const desired_size    = Random_Int(SIZE_MIN,  SIZE_MAX);
+        const max_generations = Random_Int(GENERATIONS_MIN, GENERATIONS_MAX);
 
         this.branch = new Branch(
             x,
