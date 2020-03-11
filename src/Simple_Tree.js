@@ -5,7 +5,7 @@
 //                   \__ \ || (_| | | | | | | (_| | |_| |_                    //
 //                   |___/\__\__,_|_| |_| |_|\__,_|\__|\__|                   //
 //                                                                            //
-//  File      : Simple_Tree.js                                                //
+//  File      : Simple_this.branches.js                                                //
 //  Project   : stdmatt-demos                                                 //
 //  Date      : 19 Jul, 2019                                                  //
 //  License   : GPLv3                                                         //
@@ -13,123 +13,140 @@
 //  Copyright : stdmatt - 2019                                                //
 //                                                                            //
 //  Description :                                                             //
-//   Creates a random fractal tree.                                           //
+//   Creates a random fractal this.branches.                                           //
 //---------------------------------------------------------------------------~//
 
 //----------------------------------------------------------------------------//
 // Constants                                                                  //
 //----------------------------------------------------------------------------//
-const GENERATIONS_MIN = 5
-const GENERATIONS_MAX = 10;
-const SIZE_MIN        = 80;
+const GENERATIONS_MIN = 5;
+const GENERATIONS_MAX = 7;
+const SIZE_MIN        = 50;
 const SIZE_MAX        = 180;
-const DECAY_MIN       = 0.2;
-const DECAY_MAX       = 0.5;
-const ANGLE_MIN       = 10
-const ANGLE_MAX       = 50;
+const DECAY_MIN       = 0.7;
+const DECAY_MAX       = 0.9;
+const ANGLE_MIN       = 10;
+const ANGLE_MAX       = 30;
 
 const SPEED_TO_GROW = 150;
+const MAX_TREES_COUNT = 4;
 
 //----------------------------------------------------------------------------//
 // Variables                                                                  //
 //----------------------------------------------------------------------------//
-let tree       = [];
-let total_len  = 0;
-let forward    = true;
-let curr_speed = 0;
+var background_color = chroma.rgb(221, 227, 213).name()
+var trees            = [];
 
 
 //----------------------------------------------------------------------------//
 // Helper Functions                                                           //
 //----------------------------------------------------------------------------//
+function CreateVector(x, y)
+{
+    return {x:x, y:y};
+}
+
+function hslToRgb(h, s, l)
+{
+    return [255, 255, 255, 255]
+}
+
+//----------------------------------------------------------------------------//
+// Classes                                                                    //
+//----------------------------------------------------------------------------//
 class Branch
 {
-    constructor(x, y, size, angle, distanceToRoot)
+    constructor(
+        x,
+        y,
+        currentSize,
+        currentAngle,
+        distanceToRoot,
+        currentGeneration,
+        maxGenerations)
     {
-        this.length = size;
-        this.angle  = angle;
+        this.curr_angle       = currentAngle;
+        this.curr_size        = currentSize;
+        this.curr_generation  = currentGeneration;
+        this.distance_to_root = distanceToRoot + currentSize;
 
-        this.distanceToRoot = distanceToRoot;
+        this.start = CreateVector(x, y);
+        this.end   = CreateVector(
+            x + (this.curr_size * Math_Cos(Math_Radians(this.curr_angle))),
+            y + (this.curr_size * Math_Sin(Math_Radians(this.curr_angle)))
+        );
 
-        this.start  = Math_CreateVector(x, y);
-        this.end    = Math_CreateVector(
-            x + (size * Math.cos(angle * Math.PI / 180)),
-            y + (size * Math.sin(angle * Math.PI / 180))
+        this.branches = [];
+
+        if(this.curr_generation < maxGenerations) {
+            const new_generation = this.curr_generation + 1;
+            const left_branch = new Branch(
+                this.end.x,
+                this.end.y,
+                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
+                this.curr_angle - Random_Number(ANGLE_MIN, ANGLE_MAX),
+                this.distance_to_root,
+                new_generation,
+                maxGenerations
+            );
+            const right_branch = new Branch(
+                this.end.x,
+                this.end.y,
+                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
+                this.curr_angle + Random_Number(ANGLE_MIN, ANGLE_MAX),
+                this.distance_to_root,
+                new_generation,
+                maxGenerations
+            );
+
+            this.branches.push(left_branch );
+            this.branches.push(right_branch);
+        }
+       this.color = chroma.rgb(102, 80, 93).name();
+    }
+
+    Draw(dt)
+    {
+        let x1 = this.start.x;
+        let y1 = this.start.y;
+        let x2 = this.end.x;
+        let y2 = this.end.y;
+
+        let thickness = 4; Math_Map(this.distance_to_root, 0, 400, 6, 1)
+        Canvas_SetStrokeStyle(this.color);
+        Canvas_SetStrokeSize (thickness);
+
+        Canvas_DrawLine(x1, y1, x2, y2);
+
+        for(let i = 0; i < this.branches.length; ++i) {
+            this.branches[i].Draw(dt);
+        }
+    }
+}
+
+class Tree
+{
+    constructor(x)
+    {
+        const desired_size    = Random_Number(SIZE_MIN,  SIZE_MAX);
+        const max_generations = Random_Int   (GENERATIONS_MIN, GENERATIONS_MAX);
+
+        this.branch = new Branch(
+            x,
+            Canvas_Edge_Bottom,
+            desired_size,
+            -90 + Random_Number(-10, +10),
+            0, // distance to root
+            0, // current generation
+            max_generations
         );
     }
-}
 
-function CreateTree(generations, size, decay, angle)
-{
-    let x = 0;
-    let y = Canvas_Edge_Bottom;
-
-    tree.push(new Branch(x, y, size, -90, 0));
-    generations = Math.pow(2, generations) -1;
-    for(let i = 0; i < tree.length; ++i) {
-        --generations;
-        if(generations < 0) {
-            break;
-        }
-
-        var t            = tree[i];
-        var new_size     = t.length * (1 - decay);
-        var dist_to_root = t.distanceToRoot + t.length;
-
-        let l = new Branch(t.end.x, t.end.y, new_size, t.angle + angle, dist_to_root);
-        let r = new Branch(t.end.x, t.end.y, new_size, t.angle - angle, dist_to_root);
-
-        tree.push(l);
-        tree.push(r);
+    Draw(dt)
+    {
+        this.branch.Draw(dt);
     }
-}
-
-function DrawBranch(b, distanceSoFar)
-{
-    let len = b.length;
-    let ang = b.angle;
-
-    let x1 = b.start.x;
-    let y1 = b.start.y;
-
-    let l = (distanceSoFar- b.distanceToRoot) / (b.length);
-    if(l > 1 ) {
-        l = 1;
-    }
-
-    let x2 = x1 + (len * l) * Math.cos(ang * Math.PI / 180);
-    let y2 = y1 + (len * l) * Math.sin(ang * Math.PI / 180);
-
-    let h = Math_Map(distanceSoFar, 0, tree[tree.length-1].distanceToRoot, 0, 360);
-    let rgb = hslToRgb(h / 360, 0.5, 0.5);
-    let s = "rgb(" + rgb[0] + ","
-                   + rgb[1] + ","
-                   + rgb[2] + ")"
-
-    Canvas_SetStrokeStyle(s);
-    Canvas_SetStrokeSize (4);
-
-    Canvas_DrawLine(x1, y1, x2, y2);
-}
-
-
-
-
-function GenerateTree()
-{
-    let generations = Math_RandomInt(GENERATIONS_MIN, GENERATIONS_MAX);
-    let size        = Math_Random(SIZE_MIN,        SIZE_MAX);
-    let decay       = Math_Random(DECAY_MIN,       DECAY_MAX);
-    let angle       = Math_Random(ANGLE_MIN,       ANGLE_MAX);
-
-    tree       = [];
-    total_len  = 0;
-    forward    = true;
-    curr_speed = SPEED_TO_GROW;
-
-    CreateTree(generations, size, decay, angle);
-    Log(generations, tree.length);
-}
+};
 
 //----------------------------------------------------------------------------//
 // Setup / Draw                                                               //
@@ -137,33 +154,50 @@ function GenerateTree()
 //------------------------------------------------------------------------------
 function Setup()
 {
-    GenerateTree();
+    Random_Seed(null);
+
+    //
+    // Configure the Canvas.
+    const parent        = document.getElementById("canvas_div");
+    const parent_width  = parent.clientWidth;
+    const parent_height = parent.clientHeight;
+
+    const max_side = Math_Max(parent_width, parent_height);
+    const min_side = Math_Min(parent_width, parent_height);
+    const ratio    = (min_side / max_side);
+
+    // Landscape
+    if(parent_width > parent_height) {
+        Canvas_CreateCanvas(800, 800 * ratio, parent);
+    }
+    // Portrait
+    else {
+        Canvas_CreateCanvas(800 * ratio, 800, parent);
+    }
+
+    Canvas.style.width  = "100%";
+    Canvas.style.height = "100%";
+
+    //
+    // Create the Trees.
+    const tree_root_space = (Canvas_Half_Width * 0.8);
+    for(let i = 0; i < MAX_TREES_COUNT; ++i) {
+        const tree_root_x = Random_Int(-tree_root_space, +tree_root_space);
+        trees.push(new Tree(tree_root_x));
+    }
+
+    //
+    // Start the Simulation.
+    Canvas_Start();
 }
-
-
-
 
 //------------------------------------------------------------------------------
 function Draw(dt)
 {
-    Canvas_ClearWindow("black")
-    let change = (dt * curr_speed);
-    if(!forward) {
-        change *= -1;
-    }
-
-    total_len += change;
-    for(let i = 0; i < tree.length; ++i) {
-        if(total_len >= tree[i].distanceToRoot) {
-            DrawBranch(tree[i], total_len);
-        }
-    }
-
-    if(forward && total_len >= tree[tree.length-1].distanceToRoot * 1.2) {
-        forward = false;
-        curr_speed = 500;
-    } else if(!forward  && total_len <= 0) {
-        GenerateTree();
+    Canvas_ClearWindow(background_color);
+    for(let i = 0; i < trees.length; ++i) {
+        const tree = trees[i];
+        tree.Draw(dt);
     }
 }
 
@@ -171,10 +205,4 @@ function Draw(dt)
 //----------------------------------------------------------------------------//
 // Entry Point                                                                //
 //----------------------------------------------------------------------------//
-Canvas_Setup({
-    main_title        : "Simple Trees",
-    main_date         : "Jul 19, 2019",
-    main_version      : "v0.0.1",
-    main_instructions : "<br>Move your mouse closer to the edge to increase speed",
-    main_link: "<a href=\"http://stdmatt.com/demos/startfield.html\">More info</a>"
-});
+Setup();

@@ -1,3 +1,6 @@
-[submodule "libs/base"]
-	path = libs/base
-	url = https://stdmatt@gitlab.com/stdmatt-libs/base.git
+[submodule "libs/mcow_js_canvas"]
+	path = libs/mcow_js_canvas
+	url = https://stdmatt@gitlab.com/stdmatt-libs/mcow_js_canvas
+[submodule "libs/mcow_js_core"]
+	path = libs/mcow_js_core
+	url = https://stdmatt@gitlab.com/stdmatt-libs/mcow_js_core
