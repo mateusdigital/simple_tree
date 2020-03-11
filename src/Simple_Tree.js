@@ -63,10 +63,12 @@ class Branch
     {
         if(this.curr_generation < this.max_generations) {
             const new_generation = this.curr_generation + 1;
+            let t1 = Random_Number(0.6, 1);
+            let t2 = Random_Number(t1, 1);
 
             const left_branch = new Branch(
-                this.end.x,
-                this.end.y,
+                Math_Lerp(this.start.x, this.end.x, t1),
+                Math_Lerp(this.start.y, this.end.y, t1),
                 this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
                 this.curr_angle - Random_Number(ANGLE_MIN, ANGLE_MAX),
                 this.distance_to_root,
@@ -75,8 +77,8 @@ class Branch
             );
 
             const right_branch = new Branch(
-                this.end.x,
-                this.end.y,
+                Math_Lerp(this.start.x, this.end.x, t2),
+                Math_Lerp(this.start.y, this.end.y, t2),
                 this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
                 this.curr_angle + Random_Number(ANGLE_MIN, ANGLE_MAX),
                 this.distance_to_root,
@@ -123,8 +125,12 @@ class Branch
         this.anim_grow_tween = Tween_CreateBasic(this.anim_grow_duration)
             .onComplete(()=>{
                 this.CreateSubBranch();
-            })
-            .start();
+            });
+
+            if(this.curr_generation == 0) {
+            this.anim_grow_tween.delay(Random_Int(100, 4000))
+        }
+        this.anim_grow_tween.start();
 
         // Subbranches
         this.branches = [];
@@ -206,7 +212,8 @@ function Setup()
     //
     // Create the Trees.
     const tree_root_space = (Canvas_Half_Width * 0.8);
-    for(let i = 0; i < MAX_TREES_COUNT; ++i) {
+    const trees_count     = Random_Int(1, MAX_TREES_COUNT);
+    for(let i = 0; i < trees_count; ++i) {
         const tree_root_x = Random_Int(-tree_root_space, +tree_root_space);
         trees.push(new Tree(tree_root_x));
     }
