@@ -72,8 +72,8 @@ class Branch
 
         this.start = CreateVector(x, y);
         this.end   = CreateVector(
-            x + (this.curr_size * Math.cos(this.curr_angle * Math.PI / 180)),
-            y + (this.curr_size * Math.sin(this.curr_angle * Math.PI / 180))
+            x + (this.curr_size * Math_Cos(Math_Radians(this.curr_angle))),
+            y + (this.curr_size * Math_Sin(Math_Radians(this.curr_angle)))
         );
 
         this.branches = [];
