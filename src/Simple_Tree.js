@@ -103,7 +103,6 @@ class Branch
             this.branches.push(right_branch);
         }
        this.color = chroma.rgb(102, 80, 93).name();
-
     }
 
     Draw(dt)
@@ -113,7 +112,7 @@ class Branch
         let x2 = this.end.x;
         let y2 = this.end.y;
 
-        let thickness = Math_Map(this.distance_to_root, 0, 400, 6, 1)
+        let thickness = 4; Math_Map(this.distance_to_root, 0, 400, 6, 1)
         Canvas_SetStrokeStyle(this.color);
         Canvas_SetStrokeSize (thickness);
 
