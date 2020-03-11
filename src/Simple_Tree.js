@@ -102,15 +102,12 @@ class Branch
             this.branches.push(l);
             this.branches.push(r);
         }
-       this.color =chroma.rgb(102, 80, 93).name();
+       this.color = chroma.rgb(102, 80, 93).name();
 
     }
 
     Draw(dt)
     {
-        let len = this.curr_size;
-        let ang = this.curr_angle;
-
         let x1 = this.start.x;
         let y1 = this.start.y;
         let x2 = this.end.x;
