@@ -5,15 +5,15 @@
 //                   \__ \ || (_| | | | | | | (_| | |_| |_                    //
 //                   |___/\__\__,_|_| |_| |_|\__,_|\__|\__|                   //
 //                                                                            //
-//  File      : Simple_this.branches.js                                                //
-//  Project   : stdmatt-demos                                                 //
-//  Date      : 19 Jul, 2019                                                  //
+//  File      : Simple_Tree.js                                                //
+//  Project   : simple_tree                                                   //
+//  Date      : Aug 25, 2019                                                  //
 //  License   : GPLv3                                                         //
 //  Author    : stdmatt <stdmatt@pixelwizards.io>                             //
-//  Copyright : stdmatt - 2019                                                //
+//  Copyright : stdmatt 2019, 2020                                            //
 //                                                                            //
 //  Description :                                                             //
-//   Creates a random fractal this.branches.                                           //
+//                                                                            //
 //---------------------------------------------------------------------------~//
 
 //----------------------------------------------------------------------------//
@@ -214,6 +214,17 @@ function Setup()
 
     Canvas.style.width  = "100%";
     Canvas.style.height = "100%";
+
+    //
+    // Add the information.
+    const info = document.createElement("p");
+    info.innerHTML = String_Cat(
+        "Simple Tree", "<br>",
+        "Aug 25, 2019", "<br>",
+        GetVersion(),   "<br>",
+        "<a href=\"http://stdmatt.com/demos/simple_tree.html\">More info</a>"
+    );
+    parent.appendChild(info);
 
     //
     // Create the Trees.
