@@ -81,7 +81,7 @@ class Branch
         );
         this.anim_grow_tween = Tween_CreateBasic(this.anim_grow_duration)
             .onComplete(()=>{
-                this.CreateSubBranch();
+                this._CreateSubBranch();
             });
 
         if(this.curr_generation == 0) {
@@ -113,34 +113,6 @@ class Branch
         for(let i = 0; i < this.branches.length; ++i) {
             this.branches[i].Draw(dt);
         }
-    } // Draw
-}; // class Branch
-
-
-//------------------------------------------------------------------------------
-class Tree
-{
-    //--------------------------------------------------------------------------
-    constructor(x)
-    {
-        const desired_size    = Random_Int(SIZE_MIN,  SIZE_MAX);
-        const max_generations = Random_Int(GENERATIONS_MIN, GENERATIONS_MAX);
-
-        this.branch = new Branch(
-            x,
-            Canvas_Edge_Bottom,
-            desired_size,
-            -90 +  Random_Number(-10, +10),
-            0, // distance to root
-            0, // current generation
-            max_generations
-        );
-    } // CTOR
-
-    //--------------------------------------------------------------------------
-    Draw(dt)
-    {
-        this.branch.Draw(dt);
     } // Draw
 
     //--------------------------------------------------------------------------
@@ -177,6 +149,34 @@ class Tree
             this.branches.push(right_branch);
         }
     } // _CreateSubBranch
+}; // class Branch
+
+
+//------------------------------------------------------------------------------
+class Tree
+{
+    //--------------------------------------------------------------------------
+    constructor(x)
+    {
+        const desired_size    = Random_Int(SIZE_MIN,  SIZE_MAX);
+        const max_generations = Random_Int(GENERATIONS_MIN, GENERATIONS_MAX);
+
+        this.branch = new Branch(
+            x,
+            Canvas_Edge_Bottom,
+            desired_size,
+            -90 +  Random_Number(-10, +10),
+            0, // distance to root
+            0, // current generation
+            max_generations
+        );
+    } // CTOR
+
+    //--------------------------------------------------------------------------
+    Draw(dt)
+    {
+        this.branch.Draw(dt);
+    } // Draw
 }; // class Tree
 
 //----------------------------------------------------------------------------//
