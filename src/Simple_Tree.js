@@ -22,7 +22,6 @@
 const GENERATIONS_MIN = 5;
 const GENERATIONS_MAX = 7;
 const SIZE_MIN        = 100;
-
 const SIZE_MAX        = 180;
 const DECAY_MIN       = 0.7;
 const DECAY_MAX       = 0.9;
@@ -38,8 +37,10 @@ const MAX_TREES_COUNT = 4;
 //----------------------------------------------------------------------------//
 // Variables                                                                  //
 //----------------------------------------------------------------------------//
-var background_color = chroma.rgb(221, 227, 213).name()
+var background_color = chroma.rgb(221, 227, 213).name();
+var tree_color       = chroma.rgb(102,  80,  93).name();
 var trees            = [];
+
 
 //----------------------------------------------------------------------------//
 // Classes                                                                    //
@@ -53,14 +54,15 @@ class Branch
         y,
         currentSize,
         currentAngle,
-        distanceToRoot,
         currentGeneration,
-        maxGenerations)
+        parentTree)
     {
+        // Parent Tree
+        this.parent_tree = parentTree;
+
         // Position / Size / Color
-        this.curr_angle       = currentAngle;
-        this.curr_size        = currentSize;
-        this.distance_to_root = distanceToRoot + currentSize;
+        this.curr_angle = currentAngle;
+        this.curr_size  = currentSize;
 
         this.start = Vector_Create(x, y);
         this.end   = Vector_Create(
@@ -68,11 +70,8 @@ class Branch
             y + (this.curr_size * Math_Sin(Math_Radians(this.curr_angle)))
         );
 
-        this.color = chroma.rgb(102, 80, 93).name();
-
         // Generation.
-        this.curr_generation  = currentGeneration;
-        this.max_generations  = maxGenerations;
+        this.curr_generation = currentGeneration;
 
         // Animation.
         this.anim_grow_duration = Random_Int(
@@ -106,8 +105,7 @@ class Branch
         // @notice(stdmatt): спасибо моей хорошей жене that at very early in the
         // morning just said how I should make the branches thicker near to the
         // root ;D
-        Canvas_SetStrokeStyle(this.color);
-        Canvas_SetStrokeSize((this.max_generations / (this.curr_generation + 1)))
+        Canvas_SetStrokeSize((this.parent_tree.max_generations / (this.curr_generation + 1)))
         Canvas_DrawLine(x1, y1, x2, y2);
 
         for(let i = 0; i < this.branches.length; ++i) {
@@ -118,7 +116,7 @@ class Branch
     //--------------------------------------------------------------------------
     _CreateSubBranch()
     {
-        if(this.curr_generation < this.max_generations) {
+        if(this.curr_generation < this.parent_tree.max_generations) {
             const new_generation = this.curr_generation + 1;
             // @improve(stdmatt): This way we make the branches to grow bigger
             // slightly to the left... Can be improved...
@@ -130,9 +128,8 @@ class Branch
                 Math_Lerp(this.start.y, this.end.y, t1),
                 this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
                 this.curr_angle - Random_Number(ANGLE_MIN, ANGLE_MAX),
-                this.distance_to_root,
                 new_generation,
-                this.max_generations
+                this.parent_tree
             );
 
             const right_branch = new Branch(
@@ -140,9 +137,8 @@ class Branch
                 Math_Lerp(this.start.y, this.end.y, t2),
                 this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
                 this.curr_angle + Random_Number(ANGLE_MIN, ANGLE_MAX),
-                this.distance_to_root,
                 new_generation,
-                this.max_generations
+                this.parent_tree
             );
 
             this.branches.push(left_branch );
@@ -158,23 +154,23 @@ class Tree
     //--------------------------------------------------------------------------
     constructor(x)
     {
-        const desired_size    = Random_Int(SIZE_MIN,  SIZE_MAX);
-        const max_generations = Random_Int(GENERATIONS_MIN, GENERATIONS_MAX);
+        this.max_generations = Random_Int(GENERATIONS_MIN, GENERATIONS_MAX);
+        this.color           = tree_color;
 
         this.branch = new Branch(
             x,
             Canvas_Edge_Bottom,
-            desired_size,
+            Random_Int(SIZE_MIN,  SIZE_MAX),
             -90 +  Random_Number(-10, +10),
-            0, // distance to root
             0, // current generation
-            max_generations
+            this
         );
     } // CTOR
 
     //--------------------------------------------------------------------------
     Draw(dt)
     {
+        Canvas_SetStrokeStyle(this.color);
         this.branch.Draw(dt);
     } // Draw
 }; // class Tree
