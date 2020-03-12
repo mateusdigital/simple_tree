@@ -41,57 +41,13 @@ const MAX_TREES_COUNT = 4;
 var background_color = chroma.rgb(221, 227, 213).name()
 var trees            = [];
 
-
-//----------------------------------------------------------------------------//
-// Helper Functions                                                           //
-//----------------------------------------------------------------------------//
-function CreateVector(x, y)
-{
-    return {x:x, y:y};
-}
-
-function hslToRgb(h, s, l)
-{
-    return [255, 255, 255, 255]
-}
-
 //----------------------------------------------------------------------------//
 // Classes                                                                    //
 //----------------------------------------------------------------------------//
+//------------------------------------------------------------------------------
 class Branch
 {
-    CreateSubBranch()
-    {
-        if(this.curr_generation < this.max_generations) {
-            const new_generation = this.curr_generation + 1;
-            let t1 = Random_Number(0.6, 1);
-            let t2 = Random_Number(t1, 1);
-
-            const left_branch = new Branch(
-                Math_Lerp(this.start.x, this.end.x, t1),
-                Math_Lerp(this.start.y, this.end.y, t1),
-                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
-                this.curr_angle - Random_Number(ANGLE_MIN, ANGLE_MAX),
-                this.distance_to_root,
-                new_generation,
-                this.max_generations
-            );
-
-            const right_branch = new Branch(
-                Math_Lerp(this.start.x, this.end.x, t2),
-                Math_Lerp(this.start.y, this.end.y, t2),
-                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
-                this.curr_angle + Random_Number(ANGLE_MIN, ANGLE_MAX),
-                this.distance_to_root,
-                new_generation,
-                this.max_generations
-            );
-
-            this.branches.push(left_branch );
-            this.branches.push(right_branch);
-        }
-    }
-
+    //--------------------------------------------------------------------------
     constructor(
         x,
         y,
@@ -106,8 +62,8 @@ class Branch
         this.curr_size        = currentSize;
         this.distance_to_root = distanceToRoot + currentSize;
 
-        this.start = CreateVector(x, y);
-        this.end   = CreateVector(
+        this.start = Vector_Create(x, y);
+        this.end   = Vector_Create(
             x + (this.curr_size * Math_Cos(Math_Radians(this.curr_angle))),
             y + (this.curr_size * Math_Sin(Math_Radians(this.curr_angle)))
         );
@@ -135,8 +91,9 @@ class Branch
 
         // Subbranches
         this.branches = [];
-    }
+    } // CTOR
 
+    //--------------------------------------------------------------------------
     Draw(dt)
     {
         const  t = this.anim_grow_tween.getValue().value;
@@ -146,22 +103,24 @@ class Branch
         const x2 = Math_Lerp(x1, this.end.x, t);
         const y2 = Math_Lerp(y1, this.end.y, t);
 
-        const mul = Math_Map(this.curr_generation, 0, this.max_generations, 0.7, 0.1)
-        const xa = x1 - ((this.curr_size * mul) * 0.5) * t;
-        const xb = x1 + ((this.curr_size * mul) * 0.5) * t;
-
+        // @notice(stdmatt): спасибо моей хорошей жене that at very early in the
+        // morning just said how I should make the branches thicker near to the
+        // root ;D
         Canvas_SetStrokeStyle(this.color);
         Canvas_SetStrokeSize((this.max_generations / (this.curr_generation + 1)))
-       Canvas_DrawLine(x1, y1, x2, y2);
-        // Canvas_DrawTriangle(xa, y1, x2, y2, xb, y1);
+        Canvas_DrawLine(x1, y1, x2, y2);
+
         for(let i = 0; i < this.branches.length; ++i) {
             this.branches[i].Draw(dt);
         }
-    }
-}
+    } // Draw
+}; // class Branch
 
+
+//------------------------------------------------------------------------------
 class Tree
 {
+    //--------------------------------------------------------------------------
     constructor(x)
     {
         const desired_size    = Random_Int(SIZE_MIN,  SIZE_MAX);
@@ -176,13 +135,49 @@ class Tree
             0, // current generation
             max_generations
         );
-    }
+    } // CTOR
 
+    //--------------------------------------------------------------------------
     Draw(dt)
     {
         this.branch.Draw(dt);
-    }
-};
+    } // Draw
+
+    //--------------------------------------------------------------------------
+    _CreateSubBranch()
+    {
+        if(this.curr_generation < this.max_generations) {
+            const new_generation = this.curr_generation + 1;
+            // @improve(stdmatt): This way we make the branches to grow bigger
+            // slightly to the left... Can be improved...
+            const t1 = Random_Number(0.6, 1);
+            const t2 = Random_Number(t1, 1);
+
+            const left_branch = new Branch(
+                Math_Lerp(this.start.x, this.end.x, t1),
+                Math_Lerp(this.start.y, this.end.y, t1),
+                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
+                this.curr_angle - Random_Number(ANGLE_MIN, ANGLE_MAX),
+                this.distance_to_root,
+                new_generation,
+                this.max_generations
+            );
+
+            const right_branch = new Branch(
+                Math_Lerp(this.start.x, this.end.x, t2),
+                Math_Lerp(this.start.y, this.end.y, t2),
+                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
+                this.curr_angle + Random_Number(ANGLE_MIN, ANGLE_MAX),
+                this.distance_to_root,
+                new_generation,
+                this.max_generations
+            );
+
+            this.branches.push(left_branch );
+            this.branches.push(right_branch);
+        }
+    } // _CreateSubBranch
+}; // class Tree
 
 //----------------------------------------------------------------------------//
 // Setup / Draw                                                               //
