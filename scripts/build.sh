@@ -25,8 +25,8 @@ source /usr/local/src/stdmatt/shellscript_utils/main.sh
 ##----------------------------------------------------------------------------##
 ## Variables                                                                  ##
 ##----------------------------------------------------------------------------##
-PROJECT_NAME="simple clock";
-PROJECT_PACKAGE_NAME="simple_clock";
+PROJECT_NAME="simple tree";
+PROJECT_PACKAGE_NAME="simple_tree";
 
 SCRIPT_DIR="$(pw_get_script_dir)";
 ROOT_DIR="$(pw_abspath "${SCRIPT_DIR}/..")";
