@@ -204,6 +204,17 @@ function Setup()
     Canvas.style.height = "100%";
 
     //
+    // Add the information.
+    const info = document.createElement("p");
+    info.innerHTML = String_Cat(
+        "Simple Tree", "<br>",
+        "Aug 25, 2019", "<br>",
+        GetVersion(),   "<br>",
+        "<a href=\"http://stdmatt.com/demos/simple_tree.html\">More info</a>"
+    );
+    parent.appendChild(info);
+
+    //
     // Create the Trees.
     const tree_root_space = (Canvas_Half_Width * 0.8);
     for(let i = 0; i < MAX_TREES_COUNT; ++i) {
