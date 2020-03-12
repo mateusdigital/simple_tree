@@ -21,7 +21,8 @@
 //----------------------------------------------------------------------------//
 const GENERATIONS_MIN = 5;
 const GENERATIONS_MAX = 7;
-const SIZE_MIN        = 50;
+const SIZE_MIN        = 100;
+
 const SIZE_MAX        = 180;
 const DECAY_MIN       = 0.7;
 const DECAY_MAX       = 0.9;
@@ -127,7 +128,7 @@ class Branch
                 this.CreateSubBranch();
             });
 
-            if(this.curr_generation == 0) {
+        if(this.curr_generation == 0) {
             this.anim_grow_tween.delay(Random_Int(100, 4000))
         }
         this.anim_grow_tween.start();
@@ -141,14 +142,18 @@ class Branch
         const  t = this.anim_grow_tween.getValue().value;
         const x1 = this.start.x;
         const y1 = this.start.y;
+
         const x2 = Math_Lerp(x1, this.end.x, t);
         const y2 = Math_Lerp(y1, this.end.y, t);
 
-        let thickness = 4; Math_Map(this.distance_to_root, 0, 400, 6, 1)
-        Canvas_SetStrokeStyle(this.color);
-        Canvas_SetStrokeSize (thickness);
+        const mul = Math_Map(this.curr_generation, 0, this.max_generations, 0.7, 0.1)
+        const xa = x1 - ((this.curr_size * mul) * 0.5) * t;
+        const xb = x1 + ((this.curr_size * mul) * 0.5) * t;
 
-        Canvas_DrawLine(x1, y1, x2, y2);
+        Canvas_SetStrokeStyle(this.color);
+        Canvas_SetStrokeSize((this.max_generations / (this.curr_generation + 1)))
+       Canvas_DrawLine(x1, y1, x2, y2);
+        // Canvas_DrawTriangle(xa, y1, x2, y2, xb, y1);
         for(let i = 0; i < this.branches.length; ++i) {
             this.branches[i].Draw(dt);
         }
@@ -166,7 +171,7 @@ class Tree
             x,
             Canvas_Edge_Bottom,
             desired_size,
-            -90 + Random_Number(-10, +10),
+            -90 +  Random_Number(-10, +10),
             0, // distance to root
             0, // current generation
             max_generations
@@ -185,7 +190,8 @@ class Tree
 //------------------------------------------------------------------------------
 function Setup()
 {
-    Random_Seed(null);
+    const seed = null;
+    Random_Seed(seed);
 
     //
     // Configure the Canvas.
