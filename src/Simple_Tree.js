@@ -78,10 +78,13 @@ class Branch
             ANIM_GROW_DURATION_MIN,
             ANIM_GROW_DURATION_MAX
         );
-        this.anim_grow_tween = Tween_CreateBasic(this.anim_grow_duration)
-            .onComplete(()=>{
-                this._CreateSubBranch();
-            });
+        this.anim_grow_tween = Tween_CreateBasic(
+            this.anim_grow_duration,
+            this.parent_tree.anim_grow_group
+        )
+        .onComplete(()=>{
+            this._CreateSubBranch();
+        });
 
         if(this.curr_generation == 0) {
             this.anim_grow_tween.delay(Random_Int(100, 4000))
@@ -111,39 +114,45 @@ class Branch
         for(let i = 0; i < this.branches.length; ++i) {
             this.branches[i].Draw(dt);
         }
+
+        // if(this.curr_generation >= this.parent_tree.max_generations && t >= 1) {
+        //     this.parent_tree.StartToDie();
+        // }
     } // Draw
 
     //--------------------------------------------------------------------------
     _CreateSubBranch()
     {
-        if(this.curr_generation < this.parent_tree.max_generations) {
-            const new_generation = this.curr_generation + 1;
-            // @improve(stdmatt): This way we make the branches to grow bigger
-            // slightly to the left... Can be improved...
-            const t1 = Random_Number(0.6, 1);
-            const t2 = Random_Number(t1, 1);
-
-            const left_branch = new Branch(
-                Math_Lerp(this.start.x, this.end.x, t1),
-                Math_Lerp(this.start.y, this.end.y, t1),
-                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
-                this.curr_angle - Random_Number(ANGLE_MIN, ANGLE_MAX),
-                new_generation,
-                this.parent_tree
-            );
-
-            const right_branch = new Branch(
-                Math_Lerp(this.start.x, this.end.x, t2),
-                Math_Lerp(this.start.y, this.end.y, t2),
-                this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
-                this.curr_angle + Random_Number(ANGLE_MIN, ANGLE_MAX),
-                new_generation,
-                this.parent_tree
-            );
-
-            this.branches.push(left_branch );
-            this.branches.push(right_branch);
+        if(this.curr_generation >= this.parent_tree.max_generations) {
+            return;
         }
+
+        const new_generation = this.curr_generation + 1;
+        // @improve(stdmatt): This way we make the branches to grow bigger
+        // slightly to the left... Can be improved...
+        const t1 = Random_Number(0.6, 1);
+        const t2 = Random_Number(t1, 1);
+
+        const left_branch = new Branch(
+            Math_Lerp(this.start.x, this.end.x, t1),
+            Math_Lerp(this.start.y, this.end.y, t1),
+            this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
+            this.curr_angle - Random_Number(ANGLE_MIN, ANGLE_MAX),
+            new_generation,
+            this.parent_tree
+        );
+
+        const right_branch = new Branch(
+            Math_Lerp(this.start.x, this.end.x, t2),
+            Math_Lerp(this.start.y, this.end.y, t2),
+            this.curr_size  * Random_Number(DECAY_MIN, DECAY_MAX),
+            this.curr_angle + Random_Number(ANGLE_MIN, ANGLE_MAX),
+            new_generation,
+            this.parent_tree
+        );
+
+        this.branches.push(left_branch );
+        this.branches.push(right_branch);
     } // _CreateSubBranch
 }; // class Branch
 
@@ -155,7 +164,23 @@ class Tree
     constructor(x)
     {
         this.max_generations = Random_Int(GENERATIONS_MIN, GENERATIONS_MAX);
-        this.color           = tree_color;
+        this.color           = chroma(tree_color);
+        this.is_done         = false;
+
+        // Animations.
+        this.anim_grow_group = Tween_CreateGroup()
+            .onComplete(()=>{
+                this.anim_die_tween.start();
+            });
+
+        this.anim_die_tween = Tween_CreateBasic(Random_Int(1000, 3000))
+            .delay(Random_Int(500, 2500))
+            .onUpdate((v)=>{
+                this.color = this.color.alpha(1 - v.value)
+            })
+            .onComplete(()=>{
+                this.is_done = true;
+            })
 
         this.branch = new Branch(
             x,
@@ -171,8 +196,16 @@ class Tree
     Draw(dt)
     {
         Canvas_SetStrokeStyle(this.color);
+        this.anim_grow_group.update();
         this.branch.Draw(dt);
     } // Draw
+
+    //--------------------------------------------------------------------------
+    StartToDie()
+    {
+        this.is_dying = true;
+
+    } // StartToDie
 }; // class Tree
 
 //----------------------------------------------------------------------------//
@@ -181,7 +214,7 @@ class Tree
 //------------------------------------------------------------------------------
 function Setup()
 {
-    const seed = null;
+    const seed = 1;
     Random_Seed(seed);
 
     //
@@ -219,16 +252,20 @@ function Setup()
 
     //
     // Create the Trees.
-    const tree_root_space = (Canvas_Half_Width * 0.8);
-    const trees_count     = Random_Int(1, MAX_TREES_COUNT);
+    const trees_count = Random_Int(1, MAX_TREES_COUNT);
     for(let i = 0; i < trees_count; ++i) {
-        const tree_root_x = Random_Int(-tree_root_space, +tree_root_space);
-        trees.push(new Tree(tree_root_x));
+        CreateTree();
     }
 
     //
     // Start the Simulation.
     Canvas_Start();
+}
+function CreateTree()
+{
+    const tree_root_space = (Canvas_Half_Width * 0.8);
+    const tree_root_x = Random_Int(-tree_root_space, +tree_root_space);
+    trees.push(new Tree(tree_root_x));
 }
 
 //------------------------------------------------------------------------------
@@ -237,8 +274,14 @@ function Draw(dt)
     Canvas_ClearWindow(background_color);
 
     Tween_Update(dt);
-    for(let i = 0; i < trees.length; ++i) {
+    for(let i = trees.length -1; i >= 0; --i) {
         const tree = trees[i];
+        if(tree.is_done) {
+            Array_RemoveAt(trees, i);
+            CreateTree();
+
+            continue;
+        }
         tree.Draw(dt);
     }
 }
