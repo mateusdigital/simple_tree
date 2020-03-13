@@ -31,7 +31,8 @@ const ANGLE_MAX       = 30;
 const ANIM_GROW_DURATION_MIN = 1500;
 const ANIM_GROW_DURATION_MAX = 3500;
 
-const MAX_TREES_COUNT = 4;
+const MIN_TREES_COUNT = 3;
+const MAX_TREES_COUNT = 7;
 
 
 //----------------------------------------------------------------------------//
@@ -40,6 +41,17 @@ const MAX_TREES_COUNT = 4;
 var background_color = chroma.rgb(221, 227, 213).name();
 var tree_color       = chroma.rgb(102,  80,  93).name();
 var trees            = [];
+
+
+//----------------------------------------------------------------------------//
+// Helper Functions                                                           //
+//----------------------------------------------------------------------------//
+function CreateTree()
+{
+    const tree_root_space = (Canvas_Half_Width * 0.8);
+    const tree_root_x = Random_Int(-tree_root_space, +tree_root_space);
+    trees.push(new Tree(tree_root_x));
+}
 
 
 //----------------------------------------------------------------------------//
@@ -114,10 +126,6 @@ class Branch
         for(let i = 0; i < this.branches.length; ++i) {
             this.branches[i].Draw(dt);
         }
-
-        // if(this.curr_generation >= this.parent_tree.max_generations && t >= 1) {
-        //     this.parent_tree.StartToDie();
-        // }
     } // Draw
 
     //--------------------------------------------------------------------------
@@ -173,6 +181,7 @@ class Tree
                 this.anim_die_tween.start();
             });
 
+        // @todo(stdmatt): Remove magic numbers...
         this.anim_die_tween = Tween_CreateBasic(Random_Int(1000, 3000))
             .delay(Random_Int(500, 2500))
             .onUpdate((v)=>{
@@ -252,7 +261,7 @@ function Setup()
 
     //
     // Create the Trees.
-    const trees_count = Random_Int(1, MAX_TREES_COUNT);
+    const trees_count = Random_Int(MIN_TREES_COUNT, MAX_TREES_COUNT);
     for(let i = 0; i < trees_count; ++i) {
         CreateTree();
     }
@@ -261,12 +270,7 @@ function Setup()
     // Start the Simulation.
     Canvas_Start();
 }
-function CreateTree()
-{
-    const tree_root_space = (Canvas_Half_Width * 0.8);
-    const tree_root_x = Random_Int(-tree_root_space, +tree_root_space);
-    trees.push(new Tree(tree_root_x));
-}
+
 
 //------------------------------------------------------------------------------
 function Draw(dt)
