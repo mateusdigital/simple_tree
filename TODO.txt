@@ -1,0 +1,1 @@
+[PERF] We can simplify the alpha blending and gain more performance.
