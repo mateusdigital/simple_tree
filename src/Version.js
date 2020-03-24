@@ -19,9 +19,7 @@
 //----------------------------------------------------------------------------//
 // Constants                                                                  //
 //----------------------------------------------------------------------------//
-const SIMPLE_TREE_VERSION_MAJOR = 1;
-const SIMPLE_TREE_VERSION_MINOR = 0;
-const SIMPLE_TREE_VERSION_BABY  = 0;
+const SIMPLE_TREE_VERSION = "1.0.1";
 
 //----------------------------------------------------------------------------//
 // Public Functions                                                           //
@@ -29,9 +27,5 @@ const SIMPLE_TREE_VERSION_BABY  = 0;
 //------------------------------------------------------------------------------
 function GetVersion()
 {
-    return String_Cat(
-        SIMPLE_TREE_VERSION_MAJOR, ".",
-        SIMPLE_TREE_VERSION_MINOR, ".",
-        SIMPLE_TREE_VERSION_BABY
-    );
+    return SIMPLE_TREE_VERSION;
 }
