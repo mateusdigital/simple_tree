@@ -29,10 +29,10 @@ __SOURCES = [
 ];
 
 //------------------------------------------------------------------------------
-const GENERATIONS_MIN = 5;
-const GENERATIONS_MAX = 7;
+const GENERATIONS_MIN = 3;
+const GENERATIONS_MAX = 9;
 const SIZE_MIN        = 100;
-const SIZE_MAX        = 180;
+const SIZE_MAX        = 250;
 const DECAY_MIN       = 0.7;
 const DECAY_MAX       = 0.9;
 const ANGLE_MIN       = 10;
@@ -140,12 +140,24 @@ class Branch
         if(t < 1) {
             this.parent_tree.is_done = false;
         }
+
+        if(this.parent_tree.is_dying) {
+
+            this.start.y += dt * (random_float(50, 80) * (this.curr_generation + 1));
+            this.end.y   += dt * (random_float(50, 80) * (this.curr_generation + 1));
+
+            const height  = get_canvas_height();
+            if(this.end.y < height) {
+                this.parent_tree.is_done = false;
+            }
+        }
     } // Draw
 
     //--------------------------------------------------------------------------
     _CreateSubBranch()
     {
         if(this.curr_generation >= this.parent_tree.max_generations) {
+            this.parent_tree.is_dying = true;
             return;
         }
 
