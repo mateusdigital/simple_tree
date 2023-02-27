@@ -39,17 +39,17 @@ const ANGLE_MIN       = 10;
 const ANGLE_MAX       = 30;
 
 const ANIM_GROW_DURATION_MIN = 1.5;
-const ANIM_GROW_DURATION_MAX = 3.5;
+const ANIM_GROW_DURATION_MAX = 5.5;
 
-const MIN_TREES_COUNT = 1; //3;
-const MAX_TREES_COUNT = 1; //7;
+const MIN_TREES_COUNT = 3;
+const MAX_TREES_COUNT = 7;
 
 //----------------------------------------------------------------------------//
 // Variables                                                                  //
 //----------------------------------------------------------------------------//
-var background_color = "black";
-var tree_color       = "blue";
-var trees            = [];
+const background_color = "#eee8d5";
+const tree_color       = "#58564f";
+const trees            = [];
 
 
 //----------------------------------------------------------------------------//
@@ -83,6 +83,7 @@ class Branch
     {
         // Parent Tree
         this.parent_tree = parentTree;
+        this.parent_tree.is_done = false;
 
         // Position / Size / Color
         this.curr_angle = currentAngle;
@@ -128,12 +129,16 @@ class Branch
         const x2 = lerp(t, x1, this.end.x);
         const y2 = lerp(t, y1, this.end.y);
 
-        set_canvas_stroke("white")
+        set_canvas_stroke(tree_color);
         set_canvas_line_width(this.parent_tree.max_generations / (this.curr_generation + 1));
         draw_line(x1, y1, x2, y2);
 
         for(let i = 0; i < this.branches.length; ++i) {
             this.branches[i].Draw(dt);
+        }
+
+        if(t < 1) {
+            this.parent_tree.is_done = false;
         }
     } // Draw
 
@@ -182,7 +187,7 @@ class Tree
     {
         this.max_generations = random_int(GENERATIONS_MIN, GENERATIONS_MAX);
         this.color           = chroma(tree_color);
-        this.is_done         = false;
+        this.is_done         = true;
 
         // Animations.
         this.branch = new Branch(
@@ -198,6 +203,7 @@ class Tree
     //--------------------------------------------------------------------------
     Draw(dt)
     {
+        this.is_done = true;
         this.branch.Draw(dt);
     } // Draw
 }; // class Tree
@@ -236,7 +242,6 @@ function setup_common(canvas)
     set_random_seed();
 
     set_main_canvas(canvas);
-    set_canvas_fill("white");
 
     //
     // Create the Trees.
@@ -267,13 +272,12 @@ function demo_main(user_canvas)
 //------------------------------------------------------------------------------
 function draw(dt)
 {
-    clear_canvas();
-
+    clear_canvas(background_color);
     begin_draw();
         for(let i = trees.length -1; i >= 0; --i) {
             const tree = trees[i];
             if(tree.is_done) {
-                Array_RemoveAt(trees, i);
+                trees.splice(i, 1);
                 CreateTree();
 
                 continue;
