@@ -38,11 +38,11 @@ const DECAY_MAX       = 0.9;
 const ANGLE_MIN       = 10;
 const ANGLE_MAX       = 30;
 
-const ANIM_GROW_DURATION_MIN = 1500;
-const ANIM_GROW_DURATION_MAX = 3500;
+const ANIM_GROW_DURATION_MIN = 1.5;
+const ANIM_GROW_DURATION_MAX = 3.5;
 
-const MIN_TREES_COUNT = 3;
-const MAX_TREES_COUNT = 7;
+const MIN_TREES_COUNT = 1; //3;
+const MAX_TREES_COUNT = 1; //7;
 
 //----------------------------------------------------------------------------//
 // Variables                                                                  //
@@ -58,9 +58,11 @@ var trees            = [];
 //------------------------------------------------------------------------------
 function CreateTree()
 {
-    const tree_root_space = (get_canvas_width() * 0.5 * 0.8);
-    const tree_root_x = random_int(-tree_root_space, +tree_root_space);
-    trees.push(new Tree(tree_root_x));
+    const width       = get_canvas_width();
+    const tree_root_x = random_int(width * 0.1, width * 0.9);
+    const tree        = new Tree(tree_root_x);
+
+    trees.push(tree);
 }
 
 
@@ -100,17 +102,14 @@ class Branch
             ANIM_GROW_DURATION_MIN,
             ANIM_GROW_DURATION_MAX
         );
-        this.anim_grow_tween = Tween.create(
-            this.anim_grow_duration,
-            this.parent_tree.anim_grow_group
-        )
-        .on_complete(()=>{
-            this._CreateSubBranch();
-        });
 
-        if(this.curr_generation == 0) {
-            this.anim_grow_tween.delay(random_int(100, 4000))
-        }
+        const delay_ = random_float(0, 1);
+        this.anim_grow_tween = Tween.create(this.anim_grow_duration)
+            .delay(delay_) // Delay the start...
+            .on_complete(()=>{
+                this._CreateSubBranch();
+            })
+
         this.anim_grow_tween.start();
 
         // Subbranches
@@ -120,13 +119,16 @@ class Branch
     //--------------------------------------------------------------------------
     Draw(dt)
     {
-        const  t = this.anim_grow_tween.get_value().value;
+        this.anim_grow_tween.update();
+
+        const  t = this.anim_grow_tween.get_ratio();
         const x1 = this.start.x;
         const y1 = this.start.y;
 
-        const x2 = lerp(x1, this.end.x, t);
-        const y2 = lerp(y1, this.end.y, t);
+        const x2 = lerp(t, x1, this.end.x);
+        const y2 = lerp(t, y1, this.end.y);
 
+        set_canvas_stroke("white")
         set_canvas_line_width(this.parent_tree.max_generations / (this.curr_generation + 1));
         draw_line(x1, y1, x2, y2);
 
@@ -149,8 +151,8 @@ class Branch
         const t2 = random_float(t1, 1);
 
         const left_branch = new Branch(
-            lerp(this.start.x, this.end.x, t1),
-            lerp(this.start.y, this.end.y, t1),
+            lerp(t1, this.start.x, this.end.x),
+            lerp(t1, this.start.y, this.end.y),
             this.curr_size  * random_float(DECAY_MIN, DECAY_MAX),
             this.curr_angle - random_float(ANGLE_MIN, ANGLE_MAX),
             new_generation,
@@ -158,8 +160,8 @@ class Branch
         );
 
         const right_branch = new Branch(
-            lerp(this.start.x, this.end.x, t2),
-            lerp(this.start.y, this.end.y, t2),
+            lerp(t2, this.start.x, this.end.x),
+            lerp(t2, this.start.y, this.end.y),
             this.curr_size  * random_float(DECAY_MIN, DECAY_MAX),
             this.curr_angle + random_float(ANGLE_MIN, ANGLE_MAX),
             new_generation,
@@ -183,21 +185,6 @@ class Tree
         this.is_done         = false;
 
         // Animations.
-        this.anim_grow_group = Tween.create_with_group()
-            .on_complete(()=>{
-                this.anim_die_tween.start();
-            });
-
-        // @todo(stdmatt): Remove magic numbers...
-        this.anim_die_tween = Tween.create(random_int(1000, 3000))
-            .delay(random_int(500, 2500))
-            .on_update((v)=>{
-                this.color = this.color.alpha(1 - v.value)
-            })
-            .on_complete(()=>{
-                this.is_done = true;
-            })
-
         this.branch = new Branch(
             x,
             get_canvas_height(),
@@ -211,16 +198,8 @@ class Tree
     //--------------------------------------------------------------------------
     Draw(dt)
     {
-        set_canvas_stroke(this.color)
-        this.anim_grow_group.update();
         this.branch.Draw(dt);
     } // Draw
-
-    //--------------------------------------------------------------------------
-    StartToDie()
-    {
-        this.is_dying = true;
-    } // StartToDie
 }; // class Tree
 
 //----------------------------------------------------------------------------//
@@ -266,7 +245,6 @@ function setup_common(canvas)
         CreateTree();
     }
 
-    translate_canvas_to_center();
     start_draw_loop(draw);
 }
 
@@ -292,8 +270,6 @@ function draw(dt)
     clear_canvas();
 
     begin_draw();
-        Tween_Group._default_group.update();
-        // Tween_Update(dt);
         for(let i = trees.length -1; i >= 0; --i) {
             const tree = trees[i];
             if(tree.is_done) {
