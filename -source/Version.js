@@ -6,8 +6,8 @@
 //                   |___/\__\__,_|_| |_| |_|\__,_|\__|\__|                   //
 //                                                                            //
 //  File      : Version.js                                                    //
-//  Project   : simple_tree                                                   //
-//  Date      : Mar 10, 2020                                                  //
+//  Project   : simple_clock                                                  //
+//  Date      : Mar 05, 2020                                                  //
 //  License   : GPLv3                                                         //
 //  Author    : stdmatt <stdmatt@pixelwizards.io>                             //
 //  Copyright : stdmatt 2020                                                  //
@@ -19,7 +19,7 @@
 //----------------------------------------------------------------------------//
 // Constants                                                                  //
 //----------------------------------------------------------------------------//
-const SIMPLE_TREE_VERSION = "1.1.0";
+const SIMPLE_CLOCK_VERSION = "1.1.0";
 
 //----------------------------------------------------------------------------//
 // Public Functions                                                           //
@@ -27,5 +27,5 @@ const SIMPLE_TREE_VERSION = "1.1.0";
 //------------------------------------------------------------------------------
 function GetVersion()
 {
-    return SIMPLE_TREE_VERSION;
+    return SIMPLE_CLOCK_VERSION;
 }
