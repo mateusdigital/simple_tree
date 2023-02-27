@@ -120,7 +120,7 @@ class Branch
     //--------------------------------------------------------------------------
     Draw(dt)
     {
-        this.anim_grow_tween.update();
+        this.anim_grow_tween.update(dt);
 
         const  t = this.anim_grow_tween.get_ratio();
         const x1 = this.start.x;
