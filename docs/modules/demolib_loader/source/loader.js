@@ -1,6 +1,5 @@
 //------------------------------------------------------------------------------
-function demolib_load_script(filename, path_prefix = "/")
-{
+function demolib_load_script(filename, path_prefix = "./") {
     const url = (path_prefix + filename).replace("//","/");
 
     return new Promise((resolve, reject)=> {
